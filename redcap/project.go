@@ -23,7 +23,7 @@ type RedcapField struct {
 	Matrix_group_name                          string
 	Matrix_ranking                             string
 	Question_number                            string
-	Required_field                             string
+	Required_field                             bool
 	Section_header                             string
 	Select_choices_or_calculations             []RedcapFieldChoice
 	Text_validation_max                        string
@@ -32,7 +32,7 @@ type RedcapField struct {
 }
 
 type RedcapFieldChoice struct {
-	Id int
+	Id    int
 	Label string
 }
 
@@ -59,8 +59,9 @@ type RedcapProject struct {
 }
 
 type RedcapForm struct {
-	Name   string
-	Fields []RedcapField
+	Name       string
+	Fields     []RedcapField
+	Unique_key RedcapField
 }
 
 type ExportParameters struct {
@@ -95,11 +96,11 @@ func (field *RedcapField) UnmarshalJSON(raw []byte) error {
 	field.Matrix_group_name = tmp["matrix_group_name"].(string)
 	field.Matrix_ranking = tmp["matrix_ranking"].(string)
 	field.Question_number = tmp["question_number"].(string)
-	field.Required_field = tmp["required_field"].(string)
 	field.Section_header = tmp["section_header"].(string)
 	field.Text_validation_max = tmp["text_validation_max"].(string)
 	field.Text_validation_min = tmp["text_validation_min"].(string)
 	field.Text_validation_type_or_show_slider_number = tmp["text_validation_type_or_show_slider_number"].(string)
+
 	// Marshal Redcap Choices
 	var choices []RedcapFieldChoice
 	for _, choice := range strings.Split(tmp["select_choices_or_calculations"].(string), "|") {
@@ -115,6 +116,12 @@ func (field *RedcapField) UnmarshalJSON(raw []byte) error {
 		}
 	}
 	field.Select_choices_or_calculations = choices
+	// Marshal Required Field
+	if tmp["required_field"].(string) == "Y" {
+		field.Required_field = true
+	} else {
+		field.Required_field = false
+	}
 
 	return nil
 
@@ -184,7 +191,7 @@ func (project *RedcapProject) GetForms() map[string]*RedcapForm {
 	// Get unique list of forms from metadata
 	for _, field := range fields {
 		if !project.containsForm(field.Form_name) {
-			f := RedcapForm{Name: field.Form_name}
+			f := RedcapForm{Name: field.Form_name, Unique_key: project.Unique_key}
 			project.Forms[field.Form_name] = &f
 			project.Forms[field.Form_name].addFieldToForm(field)
 		} else {
@@ -279,12 +286,25 @@ func (form *RedcapForm) ToSQL(db string) string {
 	*/
 	if db == "postgres" {
 		s := fmt.Sprintf("\nCREATE TABLE %s\n(\n", form.Name)
-		if !form.containsField(project.Unique_key) {
-			s += fmt.Sprintf("\t%s text,\n", project.Unique_key.Field_name)
-		}
+		s += fmt.Sprintf("\t%s text,\n", form.Unique_key.Field_name)
+		s += fmt.Sprintf("\tredcap_event_name text,\n")
 		for _, field := range form.Fields {
-			s += fmt.Sprintf("\t%s %s,\n", field.Field_name, "text")
+			// Handle checkbox fields
+			if (len(field.Select_choices_or_calculations) > 0) && field.Field_type == "checkbox" {
+				for _, choice := range field.Select_choices_or_calculations {
+					s += fmt.Sprintf("\t%s___%d %s,\n", field.Field_name, choice.Id, "text")
+				}
+			} else {
+				// Suppress study ID if it is in the form
+				if field.Field_name == form.Unique_key.Field_name {
+					continue
+				} else {
+					s += fmt.Sprintf("\t%s %s,\n", field.Field_name, "text")
+				}
+			}
+
 		}
+		s += fmt.Sprintf("\tform_status text,\n")
 		s = strings.TrimRight(s, ",\n") + "\n);"
 		return s
 	} else {
