@@ -44,7 +44,7 @@ type RedcapProject struct {
 	Token        string
 	Url          string
 	Field_labels []string
-	Unique_key   string
+	Unique_key   RedcapField
 	Version      string
 	Metadata     []RedcapField
 	//Longitudinal attributes
@@ -71,9 +71,9 @@ type ExportParameters struct {
 	ExportCheckboxLabel    bool
 }
 
-func contains(s map[string]*RedcapForm, e string) bool {
-	for _, a := range s {
-		if a.Name == e {
+func (project *RedcapProject) containsForm(form string) bool {
+	for _, a := range project.Forms {
+		if a.Name == form {
 			return true
 		}
 	}
@@ -106,7 +106,7 @@ func (project *RedcapProject) GetMetadata() []RedcapField {
 	}
 
 	// The first field should always be our unique key
-	project.Unique_key = fields[0].Field_name
+	project.Unique_key = fields[0]
 	project.Metadata = fields
 
 	return fields
@@ -128,25 +128,22 @@ func (project *RedcapProject) GetFieldLabels() []string {
 
 func (project *RedcapProject) GetForms() map[string]*RedcapForm {
 
-	var form_map = make(map[string]*RedcapForm)
+	project.Forms = make(map[string]*RedcapForm)
 	var fields []RedcapField
-
 	fields = project.GetMetadata()
 
 	// Get unique list of forms from metadata
 	for _, field := range fields {
-		if !contains(form_map, field.Form_name) {
+		if !project.containsForm(field.Form_name) {
 			f := RedcapForm{Name: field.Form_name}
-			form_map[field.Form_name] = &f
-			form_map[field.Form_name].addFieldToForm(field)
+			project.Forms[field.Form_name] = &f
+			project.Forms[field.Form_name].addFieldToForm(field)
 		} else {
-			form_map[field.Form_name].addFieldToForm(field)
+			project.Forms[field.Form_name].addFieldToForm(field)
 		}
 	}
 
-	project.Forms = form_map
-
-	return form_map
+	return project.Forms
 }
 
 // ExportRecords creates a request to REDCap's API for record-type content
