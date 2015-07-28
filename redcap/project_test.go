@@ -1,33 +1,34 @@
 package redcap
 
 import (
-    "testing"
-    "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-
 var project = NewRedcapProject("https://redcap.vanderbilt.edu/api/", "8E66DB6844D58E990075AFB51658A002", true)
+
 // Uninitialized Project
 var project_uninit = NewRedcapProject("https://redcap.vanderbilt.edu/api/", "8E66DB6844D58E990075AFB51658A002", false)
 
 func TestProjectForms(t *testing.T) {
 
-    assert.Equal(t, len(project.Forms), 3)
+	assert.Equal(t, len(project.Forms), 3)
 }
 
 func TestFormToSQL(t *testing.T) {
-    s:= `
+	s := `
 CREATE TABLE testing
 (
+	study_id text,
 	foo_score text,
 	bar_score text
 );`
-    assert.Equal(t, s, project.Forms["testing"].ToSQL("postgres"))
+	assert.Equal(t, s, project.Forms["testing"].ToSQL("postgres"))
 }
 
 func TestProjectToSQL(t *testing.T) {
-    // Probably fails due to inconsistent sorting of tables
-    s:= `
+	// Probably fails due to inconsistent sorting of tables
+	s := `
 CREATE TABLE demographics
 (
 	study_id text,
@@ -47,17 +48,19 @@ CREATE TABLE demographics
 );
 CREATE TABLE testing
 (
+	study_id text,
 	foo_score text,
 	bar_score text
 );
 CREATE TABLE imaging
 (
+	study_id text,
 	image_path text
 );`
-    assert.Equal(t, s, project.ToSQL("postgres"))
+	assert.Equal(t, s, project.ToSQL("postgres"))
 }
 
-func TestProjectFieldLabels(t *testing.T){
-    assert.Equal(t, len(project.Field_labels), 17)
+func TestProjectFieldLabels(t *testing.T) {
+	assert.Equal(t, len(project.Field_labels), 17)
 
 }

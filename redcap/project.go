@@ -2,13 +2,13 @@ package redcap
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 type RedcapField struct {
@@ -54,7 +54,7 @@ type RedcapProject struct {
 }
 
 type RedcapForm struct {
-	Name string
+	Name   string
 	Fields []RedcapField
 }
 
@@ -194,7 +194,7 @@ func (project *RedcapProject) ExportRecords(p ExportParameters) []byte {
 
 func (project *RedcapProject) ToSQL(db string) string {
 	s := ""
-	for _, form := range project.Forms{
+	for _, form := range project.Forms {
 		s += form.ToSQL(db)
 	}
 	return s
@@ -209,22 +209,34 @@ func (project *RedcapProject) initialize() {
 	project.GetForms()
 }
 
+func (form *RedcapForm) containsField(field RedcapField) bool {
+	for _, f := range form.Fields {
+		if f == field {
+			return true
+		}
+	}
+	return false
+}
+
 func (form *RedcapForm) addFieldToForm(field RedcapField) {
 	form.Fields = append(form.Fields, field)
 }
 
 func (form *RedcapForm) ToSQL(db string) string {
 	/*
-	Generate PostgreSQL flavored DDL
+		Generate PostgreSQL flavored DDL
 
-	go-cap makes no attempt to infer data types within REDCap forms
+		go-cap makes no attempt to infer data types within REDCap forms
 	*/
 	if db == "postgres" {
 		s := fmt.Sprintf("\nCREATE TABLE %s\n(\n", form.Name)
+		if !form.containsField(project.Unique_key) {
+			s += fmt.Sprintf("\t%s text,\n", project.Unique_key.Field_name)
+		}
 		for _, field := range form.Fields {
 			s += fmt.Sprintf("\t%s %s,\n", field.Field_name, "text")
 		}
-		s = strings.TrimRight(s,",\n") + "\n);"
+		s = strings.TrimRight(s, ",\n") + "\n);"
 		return s
 	} else {
 		fmt.Printf("The provided SQL dialect (%s) is not supported.", db)
