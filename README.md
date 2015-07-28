@@ -10,12 +10,12 @@ TODO:
 
 Api functionality
 -----------------
-Import Records
-Export File
-Import File
-Delete File
-Export Users
-Export Form Event Mappings
+* Import Records
+* Export File
+* Import File
+* Delete File
+* Export Users
+* Export Form Event Mappings
 
 
 CLI
