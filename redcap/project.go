@@ -116,7 +116,8 @@ func (field *RedcapField) UnmarshalJSON(raw []byte) error {
 		}
 	}
 	field.Select_choices_or_calculations = choices
-	// Marshal Required Field
+
+	// Marshal Required Field flag
 	if tmp["required_field"].(string) == "Y" {
 		field.Required_field = true
 	} else {
@@ -127,6 +128,8 @@ func (field *RedcapField) UnmarshalJSON(raw []byte) error {
 
 }
 
+// containsForm is a convenience method to check whether a project contains
+// a form.
 func (project *RedcapProject) containsForm(form string) bool {
 	for _, a := range project.Forms {
 		if a.Name == form {
@@ -204,6 +207,8 @@ func (project *RedcapProject) GetForms() map[string]*RedcapForm {
 
 // ExportRecords creates a request to REDCap's API for record-type content
 func (project *RedcapProject) ExportRecords(p ExportParameters) []byte {
+
+	// Set default parameters
 	if p.RawOrLabel == "" {
 		p.RawOrLabel = "raw"
 	}
@@ -222,7 +227,7 @@ func (project *RedcapProject) ExportRecords(p ExportParameters) []byte {
 
 	res, err := http.PostForm(project.Url,
 		url.Values{
-			// Required
+			// Required Parameters
 			"token":   {project.Token},
 			"content": {"record"},
 			// Optional Parameters
@@ -256,10 +261,8 @@ func (project *RedcapProject) ToSQL(db string) string {
 	return s
 }
 
+// Initialize a RedcapProject instance with metadata
 func (project *RedcapProject) initialize() {
-	/*
-		Initialize a RedcapProject with metadata
-	*/
 	project.GetMetadata()
 	project.GetFieldLabels()
 	project.GetForms()
@@ -278,16 +281,17 @@ func (form *RedcapForm) addFieldToForm(field RedcapField) {
 	form.Fields = append(form.Fields, field)
 }
 
+// ToSQL generates PostgreSQL flavored DDL. go-cap makes no attempt
+// to infer data types within REDCap forms and will defer to TEXT as
+// its default datatype.
 func (form *RedcapForm) ToSQL(db string) string {
-	/*
-		Generate PostgreSQL flavored DDL
 
-		go-cap makes no attempt to infer data types within REDCap forms
-	*/
 	if db == "postgres" {
+
 		s := fmt.Sprintf("\nCREATE TABLE %s\n(\n", form.Name)
 		s += fmt.Sprintf("\t%s text,\n", form.Unique_key.Field_name)
 		s += fmt.Sprintf("\tredcap_event_name text,\n")
+
 		for _, field := range form.Fields {
 			// Handle checkbox fields
 			if (len(field.Select_choices_or_calculations) > 0) && field.Field_type == "checkbox" {
@@ -302,10 +306,11 @@ func (form *RedcapForm) ToSQL(db string) string {
 					s += fmt.Sprintf("\t%s %s,\n", field.Field_name, "text")
 				}
 			}
-
 		}
+
 		s += fmt.Sprintf("\tform_status text,\n")
 		s = strings.TrimRight(s, ",\n") + "\n);"
+
 		return s
 	} else {
 		fmt.Printf("The provided SQL dialect (%s) is not supported.", db)
