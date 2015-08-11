@@ -11,39 +11,6 @@ import (
 	"strings"
 )
 
-type RedcapField struct {
-	Branching_logic                            string
-	Custom_alignment                           string
-	Field_label                                string
-	Field_name                                 string
-	Field_note                                 string
-	Field_type                                 string
-	Form_name                                  string
-	Identifier                                 string
-	Matrix_group_name                          string
-	Matrix_ranking                             string
-	Question_number                            string
-	Required_field                             bool
-	Section_header                             string
-	Select_choices_or_calculations             []RedcapFieldChoice
-	Text_validation_max                        string
-	Text_validation_min                        string
-	Text_validation_type_or_show_slider_number string
-}
-
-type RedcapFieldChoice struct {
-	Id    int
-	Label string
-}
-
-type RedcapEvent struct {
-	Arm_num           int
-	Day_offset        int
-	Offset_max        int
-	Offset_min        int
-	Unique_event_name string
-}
-
 type RedcapProject struct {
 	Forms        map[string]*RedcapForm
 	Token        string
@@ -58,12 +25,6 @@ type RedcapProject struct {
 	Arm_nums  []int
 }
 
-type RedcapForm struct {
-	Name       string
-	Fields     []RedcapField
-	Unique_key RedcapField
-}
-
 type ExportParameters struct {
 	Records                []string
 	Fields                 []string
@@ -75,57 +36,6 @@ type ExportParameters struct {
 	ExportSurveyFields     bool
 	ExportDataAccessGroups bool
 	ExportCheckboxLabel    bool
-}
-
-func (field *RedcapField) UnmarshalJSON(raw []byte) error {
-
-	var tmp = make(map[string]interface{})
-	err := json.Unmarshal(raw, &tmp)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	field.Branching_logic = tmp["branching_logic"].(string)
-	field.Custom_alignment = tmp["custom_alignment"].(string)
-	field.Field_label = tmp["field_label"].(string)
-	field.Field_name = tmp["field_name"].(string)
-	field.Field_note = tmp["field_note"].(string)
-	field.Field_type = tmp["field_type"].(string)
-	field.Form_name = tmp["form_name"].(string)
-	field.Identifier = tmp["identifier"].(string)
-	field.Matrix_group_name = tmp["matrix_group_name"].(string)
-	field.Matrix_ranking = tmp["matrix_ranking"].(string)
-	field.Question_number = tmp["question_number"].(string)
-	field.Section_header = tmp["section_header"].(string)
-	field.Text_validation_max = tmp["text_validation_max"].(string)
-	field.Text_validation_min = tmp["text_validation_min"].(string)
-	field.Text_validation_type_or_show_slider_number = tmp["text_validation_type_or_show_slider_number"].(string)
-
-	// Marshal Redcap Choices
-	var choices []RedcapFieldChoice
-	for _, choice := range strings.Split(tmp["select_choices_or_calculations"].(string), "|") {
-		choice := strings.TrimSpace(choice)
-		if choice != "" {
-			s := strings.Split(choice, ",")
-			id, err := strconv.Atoi(s[0])
-			if err != nil {
-				log.Fatal(err)
-			}
-			label := s[1]
-			choices = append(choices, RedcapFieldChoice{id, label})
-		}
-	}
-	field.Select_choices_or_calculations = choices
-
-	// Marshal Required Field flag
-	if tmp["required_field"].(string) == "Y" {
-		field.Required_field = true
-	} else {
-		field.Required_field = false
-	}
-
-	return nil
-
 }
 
 // containsForm is a convenience method to check whether a project contains
@@ -200,6 +110,7 @@ func (project *RedcapProject) GetForms() map[string]*RedcapForm {
 		} else {
 			project.Forms[field.Form_name].addFieldToForm(field)
 		}
+		fmt.Println(project.Forms[field.Form_name])
 	}
 
 	return project.Forms
@@ -266,57 +177,6 @@ func (project *RedcapProject) initialize() {
 	project.GetMetadata()
 	project.GetFieldLabels()
 	project.GetForms()
-}
-
-func (form *RedcapForm) containsField(field RedcapField) bool {
-	for _, f := range form.Fields {
-		if f.Field_name == field.Field_name {
-			return true
-		}
-	}
-	return false
-}
-
-func (form *RedcapForm) addFieldToForm(field RedcapField) {
-	form.Fields = append(form.Fields, field)
-}
-
-// ToSQL generates PostgreSQL flavored DDL. go-cap makes no attempt
-// to infer data types within REDCap forms and will defer to TEXT as
-// its default datatype.
-func (form *RedcapForm) ToSQL(db string) string {
-
-	if db == "postgres" {
-
-		s := fmt.Sprintf("\nCREATE TABLE %s\n(\n", form.Name)
-		s += fmt.Sprintf("\t%s text,\n", form.Unique_key.Field_name)
-		s += fmt.Sprintf("\tredcap_event_name text,\n")
-
-		for _, field := range form.Fields {
-			// Handle checkbox fields
-			if (len(field.Select_choices_or_calculations) > 0) && field.Field_type == "checkbox" {
-				for _, choice := range field.Select_choices_or_calculations {
-					s += fmt.Sprintf("\t%s___%d %s,\n", field.Field_name, choice.Id, "text")
-				}
-			} else {
-				// Suppress study ID if it is in the form
-				if field.Field_name == form.Unique_key.Field_name {
-					continue
-				} else {
-					s += fmt.Sprintf("\t%s %s,\n", field.Field_name, "text")
-				}
-			}
-		}
-
-		s += fmt.Sprintf("\tform_status text,\n")
-		s = strings.TrimRight(s, ",\n") + "\n);"
-
-		return s
-	} else {
-		fmt.Printf("The provided SQL dialect (%s) is not supported.", db)
-		return ""
-	}
-
 }
 
 func NewRedcapProject(url string, token string, initialize bool) *RedcapProject {
