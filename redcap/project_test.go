@@ -5,28 +5,6 @@ import (
 	"testing"
 )
 
-var project = NewRedcapProject("https://redcap.vanderbilt.edu/api/", "8E66DB6844D58E990075AFB51658A002", true)
-
-// Uninitialized Project
-var project_uninit = NewRedcapProject("https://redcap.vanderbilt.edu/api/", "8E66DB6844D58E990075AFB51658A002", false)
-
-func TestProjectForms(t *testing.T) {
-	assert.Equal(t, len(project.Forms), 3)
-}
-
-func TestFormToSQL(t *testing.T) {
-	s := `
-CREATE TABLE testing
-(
-	study_id text,
-	redcap_event_name text,
-	foo_score text,
-	bar_score text,
-	form_status text
-);`
-	assert.Equal(t, s, project.Forms["testing"].ToSQL("postgres"))
-}
-
 func TestProjectToSQL(t *testing.T) {
 	// Probably fails due to inconsistent sorting of tables
 	s := `
@@ -75,5 +53,4 @@ CREATE TABLE imaging
 
 func TestProjectFieldLabels(t *testing.T) {
 	assert.Equal(t, len(project.Field_labels), 17)
-
 }

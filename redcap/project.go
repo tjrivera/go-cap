@@ -2,7 +2,6 @@ package redcap
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -110,7 +109,6 @@ func (project *RedcapProject) GetForms() map[string]*RedcapForm {
 		} else {
 			project.Forms[field.Form_name].addFieldToForm(field)
 		}
-		fmt.Println(project.Forms[field.Form_name])
 	}
 
 	return project.Forms
@@ -179,6 +177,7 @@ func (project *RedcapProject) initialize() {
 	project.GetForms()
 }
 
+// Redcap Project factory function
 func NewRedcapProject(url string, token string, initialize bool) *RedcapProject {
 	project := RedcapProject{
 		Url:   url,
