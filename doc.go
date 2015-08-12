@@ -1,0 +1,2 @@
+/* Go-Cap */
+package main
