@@ -153,12 +153,14 @@ func (project *RedcapProject) ExportRecords(p ExportParameters) []byte {
 			"exportDataAccessGroups": {strconv.FormatBool(p.ExportDataAccessGroups)},
 			"exportCheckboxLabel":    {strconv.FormatBool(p.ExportCheckboxLabel)}},
 	)
-
+	if err != nil {
+		log.Fatalf("Unable to retrieve records from REDCap.")
+	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatalf("Error retrieving records")
+		log.Fatalf("Unknown response from REDCap.")
 	}
 
 	return body
