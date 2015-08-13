@@ -60,7 +60,9 @@ func (project *RedcapProject) GetMetadata() []RedcapField {
 			"token":   {project.Token},
 			"content": {"metadata"},
 			"format":  {"json"}})
-
+	if err != nil {
+		log.Fatalf("Unable to retrieve metadata from REDCap.")
+	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
