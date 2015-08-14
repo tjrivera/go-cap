@@ -20,7 +20,7 @@ var mainCmd = &cobra.Command{
 func main(){
     mainCmd.AddCommand(formsToCsv)
 
-    viper.SetEnvPrefix("gocap")
+    viper.SetEnvPrefix("rc")
     viper.AutomaticEnv()
 
     flags := mainCmd.PersistentFlags()

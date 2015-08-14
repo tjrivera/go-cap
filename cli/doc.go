@@ -1,4 +1,4 @@
 /*
-    Something something
+    The cli package 
 */
 package main
