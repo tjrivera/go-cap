@@ -1,4 +1,4 @@
 
 
-build:
-	go build -o $(GOPATH)/bin/gocap ./cli
+# build:
+# 	go build -o $(GOPATH)/bin/gocap ./cli

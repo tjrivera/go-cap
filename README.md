@@ -1,6 +1,6 @@
 # GoCap
 
-GoCap is a golang based library and CLI for REDCap. It provides helpful abstractions for making requests to REDCap's REST API.
+GoCap is a golang based library for REDCap. It provides helpful abstractions for making requests to REDCap's REST API.
 
 The project is currently in development and not considered production-ready.
 
@@ -108,8 +108,7 @@ form_retrieval.Wait()
 TODO:
 =====
 
-Api functionality
------------------
+#### Api functionality
 * Import Records
 * Export File
 * Import File
@@ -118,8 +117,9 @@ Api functionality
 * Export Form Event Mappings
 
 
-CLI
----
+#### CLI
+* Forms to CSV
+* Project/Form to SQL
 
-Tests
------
+#### Tests
+* Full test coverage
