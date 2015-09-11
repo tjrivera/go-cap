@@ -41,8 +41,8 @@ func (form *RedcapForm) ToSQL(db string) string {
 
 		for _, field := range form.Fields {
 			// Handle checkbox fields
-			if (len(field.Select_choices_or_calculations) > 0) && field.Field_type == "checkbox" {
-				for _, choice := range field.Select_choices_or_calculations {
+			if (len(field.Choices) > 0) && field.Field_type == "checkbox" {
+				for _, choice := range field.Choices {
 					s += fmt.Sprintf("\t%s___%d %s,\n", field.Field_name, choice.Id, "text")
 				}
 			} else {

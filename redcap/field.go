@@ -21,7 +21,8 @@ type RedcapField struct {
 	Question_number                            string
 	Required_field                             bool
 	Section_header                             string
-	Select_choices_or_calculations             []RedcapFieldChoice
+	Choices                                    []RedcapFieldChoice
+	Calculations                               string
 	Text_validation_max                        string
 	Text_validation_min                        string
 	Text_validation_type_or_show_slider_number string
@@ -58,19 +59,25 @@ func (field *RedcapField) UnmarshalJSON(raw []byte) error {
 
 	// Marshal Redcap Choices
 	var choices []RedcapFieldChoice
-	for _, choice := range strings.Split(tmp["select_choices_or_calculations"].(string), "|") {
-		choice := strings.TrimSpace(choice)
-		if choice != "" {
-			s := strings.Split(choice, ",")
-			id, err := strconv.Atoi(s[0])
-			if err != nil {
-				log.Fatal(err)
+	if tmp["field_type"] == "checkbox" || tmp["field_type"] == "dropdown" || tmp["field_type"] == "radio" {
+		for _, choice := range strings.Split(tmp["select_choices_or_calculations"].(string), "|") {
+			choice := strings.TrimSpace(choice)
+			if choice != "" {
+				s := strings.Split(choice, ",")
+				id, err := strconv.Atoi(s[0])
+
+				if err != nil {
+					log.Fatal("[go-cap] error marshalling redcap choices: ", err)
+				}
+				label := s[1]
+				choices = append(choices, RedcapFieldChoice{id, label})
 			}
-			label := s[1]
-			choices = append(choices, RedcapFieldChoice{id, label})
 		}
+	} else if tmp["field_type"] == "calc" {
+		field.Calculations = tmp["select_choices_or_calculations"].(string)
 	}
-	field.Select_choices_or_calculations = choices
+
+	field.Choices = choices
 
 	// Marshal Required Field flag
 	if tmp["required_field"].(string) == "Y" {

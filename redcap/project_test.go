@@ -57,22 +57,22 @@ func TestProjectFieldLabels(t *testing.T) {
 
 func TestProjectUniqueKey(t *testing.T) {
 	f := RedcapField{
-		Branching_logic:"",
-		Custom_alignment:"",
-		Field_label:"Study ID",
-		Field_name:"study_id",
-		Field_note:"",
-		Field_type:"text",
-		Form_name:"demographics",
-		Identifier:"",
-		Matrix_group_name:"",
-		Matrix_ranking:"",
-		Question_number:"",
-		Required_field:false,
-		Section_header:"",
-		Select_choices_or_calculations:[]RedcapFieldChoice(nil),
-		Text_validation_max:"",
-		Text_validation_min:"",
-		Text_validation_type_or_show_slider_number:""}
+		Branching_logic:                            "",
+		Custom_alignment:                           "",
+		Field_label:                                "Study ID",
+		Field_name:                                 "study_id",
+		Field_note:                                 "",
+		Field_type:                                 "text",
+		Form_name:                                  "demographics",
+		Identifier:                                 "",
+		Matrix_group_name:                          "",
+		Matrix_ranking:                             "",
+		Question_number:                            "",
+		Required_field:                             false,
+		Section_header:                             "",
+		Select_choices_or_calculations:             []RedcapFieldChoice(nil),
+		Text_validation_max:                        "",
+		Text_validation_min:                        "",
+		Text_validation_type_or_show_slider_number: ""}
 	assert.Equal(t, project.Unique_key, f)
 }
