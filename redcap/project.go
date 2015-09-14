@@ -78,7 +78,6 @@ func (project *RedcapProject) GetMetadata() []RedcapField {
 	// The first field should always be our unique key
 	project.Unique_key = fields[0]
 	project.Metadata = fields
-
 	return fields
 }
 
@@ -105,7 +104,7 @@ func (project *RedcapProject) GetForms() map[string]*RedcapForm {
 	// Get unique list of forms from metadata
 	for _, field := range fields {
 		if !project.containsForm(field.Form_name) {
-			f := RedcapForm{Name: field.Form_name, Unique_key: project.Unique_key}
+			f := RedcapForm{Name: field.Form_name, Unique_key: project.Unique_key, Project: project}
 			project.Forms[field.Form_name] = &f
 			project.Forms[field.Form_name].addFieldToForm(field)
 		} else {
