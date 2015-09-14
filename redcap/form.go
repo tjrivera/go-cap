@@ -9,6 +9,7 @@ type RedcapForm struct {
 	Name       string
 	Fields     []RedcapField
 	Unique_key RedcapField
+	Project    *RedcapProject
 }
 
 func (form *RedcapForm) String() string {
@@ -37,7 +38,9 @@ func (form *RedcapForm) ToSQL(db string) string {
 
 		s := fmt.Sprintf("\nCREATE TABLE %s\n(\n", form.Name)
 		s += fmt.Sprintf("\t%s text,\n", form.Unique_key.Field_name)
-		s += fmt.Sprintf("\tredcap_event_name text,\n")
+		if form.Project.Events != nil {
+			s += fmt.Sprintf("\tredcap_event_name text,\n")
+		}
 
 		for _, field := range form.Fields {
 			// Handle checkbox fields
