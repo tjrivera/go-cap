@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -69,7 +70,6 @@ func (project *RedcapProject) GetMetadata() []RedcapField {
 	if err != nil {
 		log.Fatalf("Error reading REDCap body: %s", err)
 	}
-
 	err = json.Unmarshal(body, &fields)
 	if err != nil {
 		log.Fatalf("Error parsing REDCap metadata: %s", err)
@@ -113,6 +113,38 @@ func (project *RedcapProject) GetForms() map[string]*RedcapForm {
 	}
 
 	return project.Forms
+}
+
+func (project *RedcapProject) GetEvents() []RedcapEvent {
+	if project.Events != nil {
+		return project.Events
+	}
+
+	var events []RedcapEvent
+
+	res, err := http.PostForm(project.Url,
+		url.Values{
+			"token":   {project.Token},
+			"content": {"event"},
+			"format":  {"json"}})
+	if err != nil {
+		log.Fatalf("[go-cap] error contacting redcap.")
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatalf("[go-cap] error reading response body: %s", err)
+	}
+	err = json.Unmarshal(body, &events)
+	if err != nil {
+		log.Println("[go-cap] could not determine events for this project.")
+		return nil
+	}
+	project.Events = events
+
+	return events
+
 }
 
 // ExportRecords creates a request to REDCap's API for record-type content
@@ -167,8 +199,13 @@ func (project *RedcapProject) ExportRecords(p ExportParameters) []byte {
 
 func (project *RedcapProject) ToSQL(db string) string {
 	s := ""
+	forms := []string{}
 	for _, form := range project.Forms {
-		s += form.ToSQL(db)
+		forms = append(forms, form.Name)
+	}
+	sort.Strings(forms)
+	for _, f := range forms {
+		s += project.Forms[f].ToSQL(db)
 	}
 	return s
 }
@@ -178,6 +215,7 @@ func (project *RedcapProject) initialize() {
 	project.GetMetadata()
 	project.GetFieldLabels()
 	project.GetForms()
+	project.GetEvents()
 }
 
 // Redcap Project factory function

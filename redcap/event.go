@@ -1,9 +1,10 @@
 package redcap
 
 type RedcapEvent struct {
-	Arm_num           int
-	Day_offset        int
-	Offset_max        int
-	Offset_min        int
+	Event_Name        string
+	Arm_num           string
+	Day_offset        string
+	Offset_max        string
+	Offset_min        string
 	Unique_event_name string
 }

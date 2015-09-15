@@ -6,56 +6,84 @@ import (
 )
 
 func TestProjectToSQL(t *testing.T) {
-	// Probably fails due to inconsistent sorting of tables
+	var project = NewRedcapProject("https://redcap.chop.edu/api/", "71F3F25FC3BCF2232E27298E7AFBC636", true)
 	s := `
+CREATE TABLE baseline_visit_data
+(
+	study_id text,
+	redcap_event_name text,
+	gym___0 text,
+	gym___1 text,
+	gym___2 text,
+	gym___3 text,
+	gym___4 text,
+	aerobics___0 text,
+	aerobics___1 text,
+	aerobics___2 text,
+	aerobics___3 text,
+	aerobics___4 text,
+	eat___0 text,
+	eat___1 text,
+	eat___2 text,
+	eat___3 text,
+	eat___4 text,
+	drink___0 text,
+	drink___1 text,
+	drink___2 text,
+	drink___3 text,
+	drink___4 text,
+	specify_mood text,
+	meds___1 text,
+	meds___2 text,
+	meds___3 text,
+	meds___4 text,
+	meds___5 text,
+	height text,
+	weight text,
+	comments text,
+	prealb_b text,
+	creat_b text,
+	chol_b text,
+	transferrin_b text,
+	ibd_flag text,
+	general_ibd text,
+	chrons text,
+	ulcerative_colitis text,
+	colonoscopy text,
+	colonoscopy_date text,
+	form_status text
+);
 CREATE TABLE demographics
 (
 	study_id text,
 	redcap_event_name text,
-	first_name text,
-	last_name text,
-	dob text,
+	date_enrolled text,
+	ethnicity text,
+	race text,
 	sex text,
-	address text,
-	phone_number text,
-	file text,
-	matrix1 text,
-	matrix2 text,
-	matrix3 text,
-	matcheck1___1 text,
-	matcheck1___2 text,
-	matcheck1___3 text,
-	matcheck2___1 text,
-	matcheck2___2 text,
-	matcheck2___3 text,
-	matcheck3___1 text,
-	matcheck3___2 text,
-	matcheck3___3 text,
+	given_birth text,
+	num_children text,
 	form_status text
 );
-CREATE TABLE testing
+CREATE TABLE meal_description_form
 (
 	study_id text,
 	redcap_event_name text,
-	foo_score text,
-	bar_score text,
-	form_status text
-);
-CREATE TABLE imaging
-(
-	study_id text,
-	redcap_event_name text,
-	image_path text,
+	meal_description text,
+	types_of_food text,
+	healthy text,
 	form_status text
 );`
 	assert.Equal(t, s, project.ToSQL("postgres"))
 }
 
 func TestProjectFieldLabels(t *testing.T) {
-	assert.Equal(t, len(project.Field_labels), 17)
+	var project = NewRedcapProject("https://redcap.chop.edu/api/", "71F3F25FC3BCF2232E27298E7AFBC636", true)
+	assert.Equal(t, len(project.Field_labels), 29)
 }
 
 func TestProjectUniqueKey(t *testing.T) {
+	var project = NewRedcapProject("https://redcap.chop.edu/api/", "71F3F25FC3BCF2232E27298E7AFBC636", true)
 	f := RedcapField{
 		Branching_logic:                            "",
 		Custom_alignment:                           "",
@@ -70,7 +98,7 @@ func TestProjectUniqueKey(t *testing.T) {
 		Question_number:                            "",
 		Required_field:                             false,
 		Section_header:                             "",
-		Select_choices_or_calculations:             []RedcapFieldChoice(nil),
+		Choices:                                    []RedcapFieldChoice(nil),
 		Text_validation_max:                        "",
 		Text_validation_min:                        "",
 		Text_validation_type_or_show_slider_number: ""}
