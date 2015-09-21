@@ -12,26 +12,6 @@ CREATE TABLE baseline_visit_data
 (
 	study_id text,
 	redcap_event_name text,
-	gym___0 text,
-	gym___1 text,
-	gym___2 text,
-	gym___3 text,
-	gym___4 text,
-	aerobics___0 text,
-	aerobics___1 text,
-	aerobics___2 text,
-	aerobics___3 text,
-	aerobics___4 text,
-	eat___0 text,
-	eat___1 text,
-	eat___2 text,
-	eat___3 text,
-	eat___4 text,
-	drink___0 text,
-	drink___1 text,
-	drink___2 text,
-	drink___3 text,
-	drink___4 text,
 	specify_mood text,
 	meds___1 text,
 	meds___2 text,
@@ -79,7 +59,7 @@ CREATE TABLE meal_description_form
 
 func TestProjectFieldLabels(t *testing.T) {
 	var project = NewRedcapProject("https://redcap.chop.edu/api/", "71F3F25FC3BCF2232E27298E7AFBC636", true)
-	assert.Equal(t, len(project.Field_labels), 29)
+	assert.Equal(t, len(project.Field_labels), 25)
 }
 
 func TestProjectUniqueKey(t *testing.T) {
