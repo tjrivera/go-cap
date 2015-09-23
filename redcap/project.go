@@ -106,6 +106,7 @@ func (project *RedcapProject) GetForms() map[string]*RedcapForm {
 		if !project.containsForm(field.Form_name) {
 			f := RedcapForm{Name: field.Form_name, Unique_key: project.Unique_key, Project: project}
 			project.Forms[field.Form_name] = &f
+			project.Forms[field.Form_name].Fields = make(map[string]*RedcapField)
 			project.Forms[field.Form_name].addFieldToForm(field)
 		} else {
 			project.Forms[field.Form_name].addFieldToForm(field)
@@ -145,6 +146,32 @@ func (project *RedcapProject) GetEvents() []RedcapEvent {
 
 	return events
 
+}
+
+func (project *RedcapProject) GetRecords() []RedcapRecord {
+	var params = ExportParameters{
+		Format: "json"}
+	export := project.ExportRecords(params)
+	var record_map []map[string]string
+	err := json.Unmarshal(export, &record_map)
+	if err != nil {
+		log.Fatal("[go-cap] unable to unmarshal exported records", err)
+	}
+	records := []RedcapRecord{}
+	for _, r_map := range record_map {
+		record := RedcapRecord{}
+		for field, value := range r_map {
+			for _, form := range project.Forms {
+				if form.containsField(RedcapField{Field_name: field}) {
+					f := form.Fields[field]
+					f.Value = value
+					record.Fields = append(record.Fields, f)
+				}
+			}
+		}
+		records = append(records, record)
+	}
+	return records
 }
 
 // ExportRecords creates a request to REDCap's API for record-type content

@@ -84,3 +84,20 @@ func TestProjectUniqueKey(t *testing.T) {
 		Text_validation_type_or_show_slider_number: ""}
 	assert.Equal(t, project.Unique_key, f)
 }
+
+func TestExportRecords(t *testing.T) {
+	var project = NewRedcapProject("https://redcap.chop.edu/api/", "71F3F25FC3BCF2232E27298E7AFBC636", true)
+	var params = ExportParameters{
+		Records: []string{"S891XSB0XD1NKRPF:4G0AZ5XFH"},
+		Format:  "json"}
+	var s string
+	s = `[{"study_id":"S891XSB0XD1NKRPF:4G0AZ5XFH","redcap_event_name":"enrollment_arm_1","date_enrolled":"2015-09-01","ethnicity":"1","race":"4","sex":"1","given_birth":"","num_children":"","demographics_complete":"0","specify_mood":"","meds___1":"","meds___2":"","meds___3":"","meds___4":"","meds___5":"","height":"","weight":"","comments":"","prealb_b":"","creat_b":"","chol_b":"","transferrin_b":"","ibd_flag":"","general_ibd":"","chrons":"","ulcerative_colitis":"","colonoscopy":"","colonoscopy_date":"","baseline_visit_data_complete":"","meal_description":"","types_of_food":"","healthy":"","meal_description_form_complete":""}]`
+	res := string(project.ExportRecords(params))
+	assert.Equal(t, s, res)
+}
+
+func TestGetRecords(t *testing.T) {
+	var project = NewRedcapProject("https://redcap.chop.edu/api/", "71F3F25FC3BCF2232E27298E7AFBC636", true)
+	records := project.GetRecords()
+	assert.True(t, len(records) > 0)
+}
