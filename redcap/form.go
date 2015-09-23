@@ -6,10 +6,11 @@ import (
 )
 
 type RedcapForm struct {
-	Name       string
-	Fields     []RedcapField
-	Unique_key RedcapField
-	Project    *RedcapProject
+	Name        string
+	Fields      map[string]*RedcapField
+	Field_order []*RedcapField
+	Unique_key  RedcapField
+	Project     *RedcapProject
 }
 
 func (form *RedcapForm) String() string {
@@ -26,7 +27,8 @@ func (form *RedcapForm) containsField(field RedcapField) bool {
 }
 
 func (form *RedcapForm) addFieldToForm(field RedcapField) {
-	form.Fields = append(form.Fields, field)
+	form.Fields[field.Field_name] = &field
+	form.Field_order = append(form.Field_order, &field)
 }
 
 // ToSQL generates PostgreSQL flavored DDL. go-cap makes no attempt
@@ -42,7 +44,7 @@ func (form *RedcapForm) ToSQL(db string) string {
 			s += fmt.Sprintf("\tredcap_event_name text,\n")
 		}
 
-		for _, field := range form.Fields {
+		for _, field := range form.Field_order {
 			// Handle checkbox fields
 			if (len(field.Choices) > 0) && field.Field_type == "checkbox" {
 				for _, choice := range field.Choices {
