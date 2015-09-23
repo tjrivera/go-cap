@@ -26,6 +26,7 @@ type RedcapField struct {
 	Text_validation_max                        string
 	Text_validation_min                        string
 	Text_validation_type_or_show_slider_number string
+	Value                                      string
 }
 
 type RedcapFieldChoice struct {
